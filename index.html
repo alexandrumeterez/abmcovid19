@@ -2,10 +2,71 @@
 <html>
 <head>
     <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script> 
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
 </head>
 <body>
-<canvas id="simulationContainer" width="800" height="600"></canvas>
-<div id="chartContainer" style="height: 370px; width:100%;"></div>
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm" style="background-color: red;">
+            <p id="susceptibleCount" class="h4 text-white"></p>
+        </div>
+        <div class="col-sm" style="background-color: blue;">
+            <p id="infectedCount" class="h4 text-white"></p>
+        </div>
+        <div class="col-sm" style="background-color: green;">
+            <p id="removedCount" class="h4 text-white"></p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm">
+            <canvas id="simulationContainer" width="570" height="400"></canvas>
+        </div>
+        <div class="col-sm">
+            <div id="chartContainer" style="height: 370px; width:100%;"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm">
+            <p>Population speed (simulates lockdown)</p>
+            <input type="range" min="0" max="10" value="5" step="1" class="slider" id="populationSpeed">
+        </div>
+        <div class="col-sm">
+            <p>Social distancing rate (how many people practice distancing)</p>
+            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+        </div>
+        <div class="col-sm">
+            <p>Quarantine percentage (how many infected people are quarantined)</p>
+            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm">
+            <p>Time to develop symptoms (how long you can stay asymptomatic)</p>
+            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+        </div>
+        <div class="col-sm">
+            <p>Time until detection (how long until you get diagnosed)</p>
+            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm">
+            <button type="button" id="startSimulation" class="btn btn-primary">Start simulation</button>
+            <button type="button" id="reload" class="btn btn-secondary">Reload</button>
+
+        </div>
+    </div>
+</div>
+
 <script src="model.js"></script> 
 
 </body>

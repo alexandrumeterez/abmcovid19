@@ -3,9 +3,13 @@ var context = canvas.getContext('2d');
 var width = canvas.width;
 var height = canvas.height;
 
+var populationSpeed;
+var socialDistancingRate;
+
 function getRandom(min, max) {
     return Math.random() * (max - min) + min;
 }
+
 
 const types = {
     SUSCEPTIBLE: 's',
@@ -26,10 +30,12 @@ class Person {
         this.radius = 5;
         this.cx = getRandom(this.radius, width - this.radius);
         this.cy = getRandom(this.radius, height - this.radius);
-        this.max_speed = 2;
+        this.max_speed = populationSpeed;
         this.speed_x = 3;
         this.speed_y = 3;
         this.type = type;
+        this.acc_x = 0;
+        this.acc_y = 0;
         if(type == types.SUSCEPTIBLE)
             this.color = colors.SUSCEPTIBLE;
         else if (type == types.INFECTED)
@@ -53,6 +59,17 @@ class Person {
 
     canInfect(p) {
         return (this.type == types.INFECTED && p.type == types.SUSCEPTIBLE);
+    }
+
+    repelFrom(p) {
+        var delta_x = - this.cx + p.cx;
+        var delta_y = - this.cy + p.cy;
+        var dist = delta_x * delta_x + delta_y * delta_y;
+        var force_x = - 10 / dist;
+        var force_y = - 10 / dist;
+
+        this.acc_x += force_x;
+        this.acc_y += force_y;
     }
 
     infect() {
@@ -91,10 +108,69 @@ class Person {
 
 var population = [];
 
-var n_susceptible = 300;
+var n_susceptible = 5;
 var n_infected = 1;
 var n_removed = 0;
 var n_people = n_susceptible + n_infected + n_removed;
+
+// Chart ----------------------------------------
+var dps_susceptible = [];
+var dps_infected = [];
+var chart = new CanvasJS.Chart("chartContainer", {
+	exportEnabled: true,
+	title :{
+		text: "Dynamic Spline Chart"
+	},
+	axisY: {
+		includeZero: false
+	},
+	data: [{
+		type: "splineArea",
+		markerSize: 0,
+		dataPoints: dps_susceptible 
+    }, {
+		type: "splineArea",
+		markerSize: 0,
+		dataPoints: dps_infected 
+    }]
+});
+
+var xVal = 0;
+var yVal = n_susceptible;
+var updateInterval = 1000;
+var dataLength = 50; // number of dataPoints visible at any point
+var updateChart = function (count) {
+    dps_susceptible.push({
+        x: xVal,
+        y: n_susceptible
+    });
+    dps_infected.push({
+        x: xVal,
+        y: n_infected
+    });
+    xVal++;
+	if (dps_susceptible.length > dataLength) {
+        dps_susceptible.shift();
+        dps_infected.shift();
+	}
+	chart.render();
+};
+
+
+// End chart -------------------------------------
+
+// Update stuff above chart
+var susCountDiv = document.getElementById("susceptibleCount");
+var infCountDiv = document.getElementById("removedCount");
+var remCountDiv = document.getElementById("infectedCount");
+var updateCounts = function() {
+    susCountDiv.textContent = "Susceptible: " + n_susceptible;
+    infCountDiv.textContent = "Infected: " + n_infected;
+    remCountDiv.textContent = "Removed: " + n_removed;
+};  
+updateCounts();
+setInterval(function(){updateCounts()}, updateInterval);
+// End -------------------------------------------
 
 function addPeople(count, type) {
     for(let i = 0; i < count; i++) {
@@ -116,21 +192,28 @@ function movePopulation() {
 
 function interactPopulation() {
     for(let i = 0; i < n_people; i++) {
-        for(let j = i + 1; j < n_people; j++) {
+        for(let j = 0; j < n_people; j++) {
+            if(i != j) {
+            population[i].repelFrom(population[j]);
+            
             if(population[i].metWith(population[j], 6)) {
                 if(population[i].canInfect(population[j]) || population[j].canInfect(population[i])) {
                     population[i].infect();
                     population[j].infect();
+                    n_susceptible -= 1;
+                    n_infected += 1;
                 }
             }
+        }
         }
     }
 }
 
 
 
-
 function setup() {
+    populationSpeed = document.getElementById("populationSpeed").value;
+
     addPeople(n_susceptible, types.SUSCEPTIBLE);
     addPeople(n_infected, types.INFECTED);
 }
@@ -143,5 +226,17 @@ function loop() {
     interactPopulation();
     drawPopulation();
 }
-setup();
-loop();
+
+var startSimButton = document.getElementById("startSimulation");
+startSimButton.onclick = function() {
+    setup();
+    loop();
+    updateChart(dataLength); 
+    setInterval(function(){ updateChart() }, updateInterval);
+    startSimButton.disabled = true;
+}
+
+var reloadButton = document.getElementById("reload");
+reloadButton.onclick = function() {
+    document.location.reload();
+}
