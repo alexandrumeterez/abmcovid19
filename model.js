@@ -357,6 +357,24 @@ function interactPopulation() {
     }
 }
 
+function updateTextInput(val, textDiv) {
+    document.getElementById(textDiv).textContent = val; 
+  }
+document.getElementById("populationSpeed").oninput = function() {
+    updateTextInput(this.value, "populationSpeedOut");
+}
+document.getElementById("socialDistancingRate").oninput = function() {
+    updateTextInput(this.value * 100 + "%", "socialDistancingRateOut");
+}
+document.getElementById("timeToSymptoms").oninput = function() {
+    updateTextInput(this.value + " days", "timeToSymptomsOut");
+}
+document.getElementById("quarantinePercentage").oninput = function() {
+    updateTextInput(this.value * 100 + "%", "quarantinePercentageOut");
+}
+document.getElementById("timeUntilDetection").oninput = function() {
+    updateTextInput(this.value + " days", "timeUntilDetectionOut");
+}
 
 function setValues() {
     populationSpeed = document.getElementById("populationSpeed").value;
@@ -378,7 +396,6 @@ function setup() {
     n_people = n_susceptible + n_infected + n_removed + n_asymptomatic;
     addPeople(n_susceptible, types.SUSCEPTIBLE);
     addPeople(n_infected, types.INFECTED);
-    // addPeople(n_asymptomatic, types.ASYMPTOMATIC);
     setInterval(function() {
         for(let i = 0; i < n_people; i++) {
             if(!population[i].removed) {
