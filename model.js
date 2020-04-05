@@ -8,7 +8,10 @@ var socialDistancingRate;
 var enableSocialDistancing;
 var timeToSymptoms;
 var quarantinePercentage;
-
+var timeUntilDetection;
+var infectionCircleRadius;
+var susceptibleCount;
+var infectedCount;
 function getRandom(min, max) {
     return Math.random() * (max - min) + min;
 }
@@ -32,7 +35,7 @@ const colors = {
 // i = infected
 class Person {
     constructor(type) {
-        this.radius = 5;
+        this.radius = 3;
         this.cx = getRandom(this.radius, width - this.radius);
         this.cy = getRandom(this.radius, height - this.radius);
         this.max_speed = populationSpeed;
@@ -44,7 +47,8 @@ class Person {
         this.removed = false;
         this.willBeQuarantined = false;
         this.asymptomaticTime = 0;
-
+        this.symptomaticTime = 0;
+        this.hasInfectedCount = 0;
         if (Math.random() < quarantinePercentage) {
             this.willBeQuarantined = true;
         }
@@ -65,6 +69,13 @@ class Person {
         context.arc(this.cx, this.cy, this.radius, 0. ,2 * Math.PI, false);
         context.fillStyle = this.color;
         context.fill();
+        context.strokeStyle = "#000000";
+
+        context.stroke();
+        context.beginPath();
+        context.arc(this.cx, this.cy, infectionCircleRadius, 0. , 2 * Math.PI, false);
+        context.strokeStyle = "#F5F5F5";
+        
         context.stroke();
     }
 
@@ -191,11 +202,17 @@ class Person {
             }
         }
         if (this.type == types.INFECTED) {
-            console.log("HERE");
             if(this.willBeQuarantined) {
                 this.removed = true;
                 n_infected -= 1;
                 n_removed += 1;
+            } else {
+                this.symptomaticTime += 1;
+                if (this.symptomaticTime == timeUntilDetection) {
+                    this.removed = true;
+                    n_infected -= 1;
+                    n_removed += 1;
+                }
             }
         }
     }
@@ -205,8 +222,8 @@ class Person {
 
 var population = [];
 
-var n_susceptible = 0;
-var n_infected = 10;
+var n_susceptible = 100;
+var n_infected = 1;
 var n_removed = 0;
 var n_asymptomatic = 0;
 var n_people = n_susceptible + n_infected + n_removed + n_asymptomatic;
@@ -214,14 +231,18 @@ var n_people = n_susceptible + n_infected + n_removed + n_asymptomatic;
 // Chart ----------------------------------------
 var dps_susceptible = [];
 var dps_infected = [];
+var dps_removed = [];
 var chart = new CanvasJS.Chart("chartContainer", {
 	exportEnabled: true,
 	title :{
-		text: "Dynamic Spline Chart"
+		text: "SEIR Model"
 	},
 	axisY: {
 		includeZero: false
-	},
+    },
+    axisX: {
+        title: "Time(1s=1day)"
+    },
 	data: [{
 		type: "splineArea",
 		markerSize: 0,
@@ -230,6 +251,10 @@ var chart = new CanvasJS.Chart("chartContainer", {
 		type: "splineArea",
 		markerSize: 0,
 		dataPoints: dps_infected 
+    }, {
+		type: "splineArea",
+		markerSize: 0,
+		dataPoints: dps_removed 
     }]
 });
 
@@ -240,16 +265,25 @@ var dataLength = 50; // number of dataPoints visible at any point
 var updateChart = function (count) {
     dps_susceptible.push({
         x: xVal,
-        y: n_susceptible
+        y: n_susceptible,
+        lineColor: "blue"
     });
     dps_infected.push({
         x: xVal,
-        y: n_infected
+        y: n_infected,
+        lineColor: "red"
     });
+    dps_removed.push({
+        x: xVal,
+        y: n_removed,
+        lineColor: "green"
+    });
+    
     xVal++;
 	if (dps_susceptible.length > dataLength) {
         dps_susceptible.shift();
         dps_infected.shift();
+        dps_removed.shift();
 	}
 	chart.render();
 };
@@ -262,15 +296,13 @@ var susCountDiv = document.getElementById("susceptibleCount");
 var infCountDiv = document.getElementById("infectedCount");
 var remCountDiv = document.getElementById("removedCount");
 var asympCountDiv = document.getElementById("asymptomaticCount");
-
 var updateCounts = function() {
     susCountDiv.textContent = "Susceptible: " + n_susceptible;
     infCountDiv.textContent = "Infected: " + n_infected;
     remCountDiv.textContent = "Removed: " + n_removed;
     asympCountDiv.textContent = "Asymptomatic: " + n_asymptomatic;
 };  
-updateCounts();
-setInterval(function(){updateCounts()}, updateInterval);
+// updateCounts();
 // End -------------------------------------------
 
 function addPeople(count, type) {
@@ -312,8 +344,9 @@ function interactPopulation() {
     for(let i = 0; i < n_people; i++) {
         for(let j = 0; j < n_people; j++) {
             if(i != j) {
-                if(population[i].metWith(population[j], 6)) {
+                if(population[i].metWith(population[j], infectionCircleRadius)) {
                     if(population[i].canInfect(population[j])) {
+                        population[i].hasInfectedCount += 1;
                         population[j].infect();
                         n_asymptomatic += 1;
                         n_susceptible -= 1;
@@ -331,11 +364,19 @@ function setValues() {
     socialDistancingRate = document.getElementById("socialDistancingRate").value;
     timeToSymptoms = document.getElementById("timeToSymptoms").value;
     quarantinePercentage = document.getElementById("quarantinePercentage").value;
+    timeUntilDetection = document.getElementById("timeUntilDetection").value;
+    infectionCircleRadius = document.getElementById("infectionCircleRadius").value;
+    susceptibleCount = document.getElementById("initSusceptibleCount").value;
+    infectedCount = document.getElementById("initInfectedCount").value;
 }
 
 function setup() {
 
     setValues();
+    n_susceptible = susceptibleCount;
+    n_infected = infectedCount;
+    // n_people = n_susceptible + n_infected + n_removed + n_asymptomatic;
+    console.log(n_infected);
     addPeople(n_susceptible, types.SUSCEPTIBLE);
     addPeople(n_infected, types.INFECTED);
     // addPeople(n_asymptomatic, types.ASYMPTOMATIC);
@@ -345,7 +386,9 @@ function setup() {
                 population[i].update();
             }
         }
-    }, updateInterval);    
+    }, updateInterval);  
+    updateCounts();  
+    setInterval(function(){updateCounts()}, updateInterval);
 }
 
 function loop() {
