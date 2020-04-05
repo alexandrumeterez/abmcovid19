@@ -9,21 +9,22 @@
 
 </head>
 <body>
-
-
 <div class="container">
     <div class="row">
-        <div class="col-sm" style="background-color: red;">
-            <p id="susceptibleCount" class="h4 text-white"></p>
+        <div class="col-sm">
+            <p id="susceptibleCount" style="box-shadow: 0px 1px 10px 1px black; background-color: #0275d8; border-radius: 0px 0px 5px 5px;" class="h4 text-white"></p>
         </div>
-        <div class="col-sm" style="background-color: blue;">
-            <p id="infectedCount" class="h4 text-white"></p>
+        <div class="col-sm">
+            <p id="infectedCount" style="box-shadow: 0px 1px 10px 1px black; background-color: #d9534f; border-radius: 0px 0px 5px 5px;" class="h4 text-white"></p>
         </div>
-        <div class="col-sm" style="background-color: green;">
-            <p id="removedCount" class="h4 text-white"></p>
+        <div class="col-sm">
+            <p id="removedCount" style="box-shadow: 0px 1px 10px 1px black; background-color: #5cb85c; border-radius: 0px 0px 5px 5px;" class="h4 text-white"></p>
+        </div>
+        <div class="col-sm">
+            <p id="asymptomaticCount" style="box-shadow: 0px 1px 10px 1px black; background-color: #f0ad4e; border-radius: 0px 0px 5px 5px;" class="h4 text-white"></p>
         </div>
     </div>
-    <div class="row">
+    <div class="row p-3">
         <div class="col-sm">
             <canvas id="simulationContainer" width="570" height="400"></canvas>
         </div>
@@ -35,38 +36,74 @@
     <div class="row">
         <div class="col-sm">
             <p>Population speed (simulates lockdown)</p>
-            <input type="range" min="0" max="10" value="5" step="1" class="slider" id="populationSpeed">
+            <input type="range" min="0" max="3" value="2" step="0.1" class="slider" id="populationSpeed">
+            <output id="populationSpeedOut" for="populationSpeed">2</output>
         </div>
         <div class="col-sm">
-            <p>Social distancing rate (how many people practice distancing)</p>
-            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+            <p>Social distancing rate (how many people practice distancing)<sup>*</sup></p>
+            <input type="range" min="0" max="1" value="0.5" step="0.1" class="slider" id="socialDistancingRate">
+            <output id="socialDistancingRateOut" for="socialDistancingRate">50%</output>
         </div>
         <div class="col-sm">
-            <p>Quarantine percentage (how many infected people are quarantined)</p>
-            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+            <p>Quarantine percentage (how many infected people are quarantined as soon as showing symptoms)<sup>*</sup></p>
+            <input type="range" min="0" max="1" value="0.5" step="0.1" class="slider" id="quarantinePercentage">
+            <output id="quarantinePercentageOut" for="quarantinePercentage">50%</output>
+
         </div>
     </div>
 
     <div class="row">
         <div class="col-sm">
-            <p>Time to develop symptoms (how long you can stay asymptomatic)</p>
-            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+            <p>Time to develop symptoms (how long you can stay asymptomatic)<sup>*</sup></p>
+            <input type="range" min="7" max="14" value="10" class="slider" id="timeToSymptoms">
+            <output id="timeToSymptomsOut" for="timeToSymptoms">10 days</output>
+
         </div>
         <div class="col-sm">
-            <p>Time until detection (how long until you get diagnosed)</p>
-            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+            <p>Time until detection (how long until you get diagnosed and removed after showing symptoms, simulates how much we test)<sup>*</sup></p>
+            <input type="range" min="1" max="14" value="3" class="slider" id="timeUntilDetection">
+            <output id="timeUntilDetectionOut" for="timeUntilDetection">3 days</output>
+            
+        </div>
+        <div class="col-sm">
+            <p>Circle of infection (how many people one person can infect at once)</p>
+            <input type="range" min="5" max="20" value="5" class="slider" id="infectionCircleRadius">
         </div>
     </div>
 
     <div class="row">
+        <div class="col-sm">
+            <input type="checkbox" id="enableSocialDistancing" name="enableSocialDistancing" value="enableSocialDistancing">
+            <label for="enableSocialDistancing">Enable social distancing</label><br>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm">
+            <label for="initSusceptibleCount">Initial number of susceptibles: </label>
+            <input type="number" id="initSusceptibleCount" name="initSusceptibleCount" min="100" max="500" value="100">
+        </div>
+        <div class="col-sm">
+            <label for="initInfectedCount">Initial number of infected: </label>
+            <input type="number" id="initInfectedCount" name="initInfectedCount" min="1" max="20" value="1">
+        </div>
+    </div>
+
+    <div class="row p-3">
         <div class="col-sm">
             <button type="button" id="startSimulation" class="btn btn-primary">Start simulation</button>
             <button type="button" id="reload" class="btn btn-secondary">Reload</button>
-
+        </div>
+    </div>
+    <div class="row p-3">
+        <div class="col-sm">
+            <p><sup>*</sup>can't be modified after starting simulation</p>
         </div>
     </div>
 </div>
-
+<nav class="navbar fixed-bottom navbar-dark bg-dark text-white">
+    Created by Alexandru Meterez©
+</nav>
 <script src="model.js"></script> 
 
 </body>
