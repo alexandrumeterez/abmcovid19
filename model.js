@@ -408,6 +408,9 @@ function setValues() {
     document.getElementById("timeToSymptoms").disabled = true;
     document.getElementById("timeUntilDetection").disabled = true;
     document.getElementById("asymptomaticProbability").disabled = true;
+    document.getElementById("initSusceptibleCount").disabled = true;
+    document.getElementById("initInfectedCount").disabled = true;
+    document.getElementById("numberBeds").disabled = true;
 }
 
 function setup() {
