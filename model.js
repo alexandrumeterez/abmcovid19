@@ -7,6 +7,7 @@ var populationSpeed;
 var socialDistancingRate;
 var enableSocialDistancing;
 var timeToSymptoms;
+var quarantinePercentage;
 
 function getRandom(min, max) {
     return Math.random() * (max - min) + min;
@@ -40,7 +41,13 @@ class Person {
         this.type = type;
         this.acc_x = 0;
         this.acc_y = 0;
+        this.removed = false;
+        this.willBeQuarantined = false;
         this.asymptomaticTime = 0;
+
+        if (Math.random() < quarantinePercentage) {
+            this.willBeQuarantined = true;
+        }
         if (Math.random() < socialDistancingRate)
             this.practicesSocialDistance = true;
         else
@@ -183,6 +190,14 @@ class Person {
                 n_infected += 1;
             }
         }
+        if (this.type == types.INFECTED) {
+            console.log("HERE");
+            if(this.willBeQuarantined) {
+                this.removed = true;
+                n_infected -= 1;
+                n_removed += 1;
+            }
+        }
     }
 }
 
@@ -190,8 +205,8 @@ class Person {
 
 var population = [];
 
-var n_susceptible = 100;
-var n_infected = 1;
+var n_susceptible = 0;
+var n_infected = 10;
 var n_removed = 0;
 var n_asymptomatic = 0;
 var n_people = n_susceptible + n_infected + n_removed + n_asymptomatic;
@@ -266,34 +281,28 @@ function addPeople(count, type) {
 
 function drawPopulation() {
     for(let i = 0; i < n_people; i++) {
-        population[i].draw();
+        if (!population[i].removed) {
+            population[i].draw();
+        }
     }
 }
 
 function updatePopulation() {
     for(let i = 0; i < n_people; i++) {
-        population[i].max_speed = populationSpeed;
-        population[i].move();
+        if (!population[i].removed) {
+            population[i].max_speed = populationSpeed;
+            population[i].move();
+        }
     }
 }
 function applyForces() {
     for(let i = 0; i < n_people; i++) {
         for(let j = 0; j < n_people; j++) {
-            if(i != j) {
+            if(i != j && !population[i].removed && !population[j].removed) {
                 if (enableSocialDistancing) {
                     var force = population[j].calculateRepulsion(population[i]);
                     population[i].applyForce(force[0], force[1]);
                 }
-            }
-        }
-    }
-}
-
-function applyCollisions() {
-    for(let i = 0; i < n_people; i++) {
-        for(let j = 0; j < n_people; j++) {
-            if(i != j) {
-                population[i].collideWith(population[j]);
             }
         }
     }
@@ -321,6 +330,7 @@ function setValues() {
     enableSocialDistancing = document.getElementById("enableSocialDistancing").checked;
     socialDistancingRate = document.getElementById("socialDistancingRate").value;
     timeToSymptoms = document.getElementById("timeToSymptoms").value;
+    quarantinePercentage = document.getElementById("quarantinePercentage").value;
 }
 
 function setup() {
@@ -331,7 +341,9 @@ function setup() {
     // addPeople(n_asymptomatic, types.ASYMPTOMATIC);
     setInterval(function() {
         for(let i = 0; i < n_people; i++) {
-            population[i].update();
+            if(!population[i].removed) {
+                population[i].update();
+            }
         }
     }, updateInterval);    
 }
