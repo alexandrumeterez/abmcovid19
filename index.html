@@ -40,12 +40,12 @@
             <output id="populationSpeedOut" for="populationSpeed">2</output>
         </div>
         <div class="col-sm">
-            <p>Social distancing rate (how many people practice distancing)</p>
+            <p>Social distancing rate (how many people practice distancing)<sup>*</sup></p>
             <input type="range" min="0" max="1" value="0.5" step="0.1" class="slider" id="socialDistancingRate">
             <output id="socialDistancingRateOut" for="socialDistancingRate">50%</output>
         </div>
         <div class="col-sm">
-            <p>Quarantine percentage (how many infected people are quarantined as soon as showing symptoms)</p>
+            <p>Quarantine percentage (how many infected people are quarantined as soon as showing symptoms)<sup>*</sup></p>
             <input type="range" min="0" max="1" value="0.5" step="0.1" class="slider" id="quarantinePercentage">
             <output id="quarantinePercentageOut" for="quarantinePercentage">50%</output>
 
@@ -54,13 +54,13 @@
 
     <div class="row">
         <div class="col-sm">
-            <p>Time to develop symptoms (how long you can stay asymptomatic)</p>
+            <p>Time to develop symptoms (how long you can stay asymptomatic)<sup>*</sup></p>
             <input type="range" min="7" max="14" value="10" class="slider" id="timeToSymptoms">
             <output id="timeToSymptomsOut" for="timeToSymptoms">10 days</output>
 
         </div>
         <div class="col-sm">
-            <p>Time until detection (how long until you get diagnosed and removed after showing symptoms, simulates how much we test)</p>
+            <p>Time until detection (how long until you get diagnosed and removed after showing symptoms, simulates how much we test)<sup>*</sup></p>
             <input type="range" min="1" max="14" value="3" class="slider" id="timeUntilDetection">
             <output id="timeUntilDetectionOut" for="timeUntilDetection">3 days</output>
             
@@ -93,7 +93,11 @@
         <div class="col-sm">
             <button type="button" id="startSimulation" class="btn btn-primary">Start simulation</button>
             <button type="button" id="reload" class="btn btn-secondary">Reload</button>
-            
+        </div>
+    </div>
+    <div class="row p-3">
+        <div class="col-sm">
+            <p><sup>*</sup>can't be modified after starting simulation</p>
         </div>
     </div>
 </div>

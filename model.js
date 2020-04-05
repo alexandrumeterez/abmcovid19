@@ -386,6 +386,11 @@ function setValues() {
     infectionCircleRadius = document.getElementById("infectionCircleRadius").value;
     susceptibleCount = document.getElementById("initSusceptibleCount").value;
     infectedCount = document.getElementById("initInfectedCount").value;
+
+    document.getElementById("socialDistancingRate").disabled = true;
+    document.getElementById("quarantinePercentage").disabled = true;
+    document.getElementById("timeToSymptoms").disabled = true;
+    document.getElementById("timeUntilDetection").disabled = true;
 }
 
 function setup() {
