@@ -12,6 +12,8 @@ var timeUntilDetection;
 var infectionCircleRadius;
 var susceptibleCount;
 var infectedCount;
+var asymptomaticProbability;
+var numberBeds;
 function getRandom(min, max) {
     return Math.random() * (max - min) + min;
 }
@@ -45,13 +47,9 @@ class Person {
         this.acc_x = 0;
         this.acc_y = 0;
         this.removed = false;
-        this.willBeQuarantined = false;
         this.asymptomaticTime = 0;
         this.symptomaticTime = 0;
         this.hasInfectedCount = 0;
-        if (Math.random() < quarantinePercentage) {
-            this.willBeQuarantined = true;
-        }
         if (Math.random() < socialDistancingRate)
             this.practicesSocialDistance = true;
         else
@@ -145,8 +143,17 @@ class Person {
     }
 
     infect() {
-        this.type = types.ASYMPTOMATIC;
-        this.color = colors.ASYMPTOMATIC;
+        if(Math.random() < asymptomaticProbability) {
+            this.type = types.ASYMPTOMATIC;
+            this.color = colors.ASYMPTOMATIC;
+            n_asymptomatic += 1;
+            n_susceptible -= 1;
+        } else {
+            this.type = types.INFECTED;
+            this.color = colors.INFECTED;
+            n_infected += 1;
+            n_susceptible -= 1;
+        }
     }
 
     developSymptoms() {
@@ -202,7 +209,7 @@ class Person {
             }
         }
         if (this.type == types.INFECTED) {
-            if(this.willBeQuarantined) {
+            if(Math.random() < quarantinePercentage) {
                 this.removed = true;
                 n_infected -= 1;
                 n_removed += 1;
@@ -238,7 +245,14 @@ var chart = new CanvasJS.Chart("chartContainer", {
 		text: "SEIR Model"
 	},
 	axisY: {
-		includeZero: false
+        includeZero: false,
+        stripLines: [
+            {
+                value: numberBeds,
+                color: "#808080",
+                thickness: 5
+            }
+          ]
     },
     axisX: {
         title: "Time(1s=1day)"
@@ -263,6 +277,7 @@ var yVal = n_susceptible;
 var updateInterval = 1000;
 var dataLength = 50; // number of dataPoints visible at any point
 var updateChart = function (count) {
+    chart.options.axisY.stripLines[0].value = numberBeds;
     dps_susceptible.push({
         x: xVal,
         y: n_susceptible,
@@ -270,7 +285,7 @@ var updateChart = function (count) {
     });
     dps_infected.push({
         x: xVal,
-        y: n_infected,
+        y: n_infected + n_asymptomatic,
         lineColor: "red"
     });
     dps_removed.push({
@@ -278,7 +293,6 @@ var updateChart = function (count) {
         y: n_removed,
         lineColor: "green"
     });
-    
     xVal++;
 	if (dps_susceptible.length > dataLength) {
         dps_susceptible.shift();
@@ -348,8 +362,6 @@ function interactPopulation() {
                     if(population[i].canInfect(population[j])) {
                         population[i].hasInfectedCount += 1;
                         population[j].infect();
-                        n_asymptomatic += 1;
-                        n_susceptible -= 1;
                     }
                 }
             }
@@ -375,6 +387,9 @@ document.getElementById("quarantinePercentage").oninput = function() {
 document.getElementById("timeUntilDetection").oninput = function() {
     updateTextInput(this.value + " days", "timeUntilDetectionOut");
 }
+document.getElementById("asymptomaticProbability").oninput = function() {
+    updateTextInput(this.value * 100 + "%", "asymptomaticProbabilityOut");
+}
 
 function setValues() {
     populationSpeed = document.getElementById("populationSpeed").value;
@@ -386,16 +401,19 @@ function setValues() {
     infectionCircleRadius = document.getElementById("infectionCircleRadius").value;
     susceptibleCount = document.getElementById("initSusceptibleCount").value;
     infectedCount = document.getElementById("initInfectedCount").value;
-
+    asymptomaticProbability = document.getElementById("asymptomaticProbability").value;
+    numberBeds = document.getElementById("numberBeds").value;
     document.getElementById("socialDistancingRate").disabled = true;
     document.getElementById("quarantinePercentage").disabled = true;
     document.getElementById("timeToSymptoms").disabled = true;
     document.getElementById("timeUntilDetection").disabled = true;
+    document.getElementById("asymptomaticProbability").disabled = true;
 }
 
 function setup() {
 
     setValues();
+    // chart.axisY.stripLines[0] = [{startValue: 50, endValue:60, color: "#d8d8d8"}];
     n_susceptible = parseInt(susceptibleCount);
     n_infected = parseInt(infectedCount);
     n_people = n_susceptible + n_infected + n_removed + n_asymptomatic;
