@@ -5,6 +5,7 @@ var height = canvas.height;
 
 var populationSpeed;
 var socialDistancingRate;
+var enableSocialDistancing;
 
 function getRandom(min, max) {
     return Math.random() * (max - min) + min;
@@ -13,12 +14,14 @@ function getRandom(min, max) {
 
 const types = {
     SUSCEPTIBLE: 's',
+    ASYMPTOMATIC: 'a',
     INFECTED: 'i',
     REMOVED: 'r'
 }
 
 const colors = {
     SUSCEPTIBLE: 'blue',
+    ASYMPTOMATIC: 'yellow',
     INFECTED: 'red',
     REMOVED: 'green'
 }
@@ -31,11 +34,15 @@ class Person {
         this.cx = getRandom(this.radius, width - this.radius);
         this.cy = getRandom(this.radius, height - this.radius);
         this.max_speed = populationSpeed;
-        this.speed_x = 3;
-        this.speed_y = 3;
+        this.speed_x = 3 * (Math.floor(Math.random() * 2) || -1);
+        this.speed_y = 3 * (Math.floor(Math.random() * 2) || -1);
         this.type = type;
         this.acc_x = 0;
         this.acc_y = 0;
+        if (Math.random() < socialDistancingRate)
+            this.practicesSocialDistance = true;
+        else
+            this.practicesSocialDistance = false;
         if(type == types.SUSCEPTIBLE)
             this.color = colors.SUSCEPTIBLE;
         else if (type == types.INFECTED)
@@ -57,19 +64,61 @@ class Person {
         return dist < threshold
     }
 
+    getBounds() {
+        return [this.cx - this.radius, this.cy - this.radius, this.cx + this.radius, this.cy + this.radius]
+    }
+
+    intersects(p) {
+        var myBounds = this.getBounds();
+        var pBounds = p.getBounds();
+
+        return !(myBounds[0] > pBounds[3] || 
+                myBounds[3] > pBounds[0] ||
+                myBounds[1] > pBounds[4] ||
+                myBounds[4] > pBounds[1]);  
+    }
+
+    collideWith(p) {
+        var dx = this.cx - p.cx;
+        var dy = this.cy - p.cy;
+
+        var dist = Math.sqrt(dx*dx + dy*dy);
+
+        if(dist <= 2 * this.radius) {
+            this.speed_x *= -1;
+            this.speed_y *= -1;
+
+            this.cx += this.speed_x + 0.5;
+            this.cy += this.speed_y + 0.5;
+        }
+    }
+
     canInfect(p) {
         return (this.type == types.INFECTED && p.type == types.SUSCEPTIBLE);
     }
 
-    repelFrom(p) {
-        var delta_x = - this.cx + p.cx;
-        var delta_y = - this.cy + p.cy;
-        var dist = delta_x * delta_x + delta_y * delta_y;
-        var force_x = - 10 / dist;
-        var force_y = - 10 / dist;
-
+    applyForce(force_x, force_y) {
         this.acc_x += force_x;
         this.acc_y += force_y;
+    }
+
+    calculateRepulsion(p) {
+        var force_x = this.cx - p.cx;
+        var force_y = this.cy - p.cy;
+        var distance = Math.sqrt(force_x*force_x + force_y*force_y);
+
+        // normalize
+        force_x /= distance;
+        force_y /= distance;
+
+        // distance = Math.min(Math.max(distance, 1), 25);
+        // distance = Math.constrain(distance, 5, 25);
+
+        var G = 50;
+        var strength = - G / (distance * distance);
+        force_x *= strength;
+        force_y *= strength;
+        return [force_x, force_y];
     }
 
     infect() {
@@ -77,30 +126,42 @@ class Person {
         this.color = colors.INFECTED;
     }
 
-    getNewSpeed(currentSpeed, maxSpeed) {
-        let newSpeed;
-        if (currentSpeed) {
-            newSpeed = currentSpeed + Math.sin(Math.random() * 2 - 1);
-            if (Math.abs(newSpeed) > maxSpeed) {
-                newSpeed = Math.sign(newSpeed) * maxSpeed;
-            }
-        } else {
-            newSpeed = Math.sin(Math.random() * 2 - 1) * maxSpeed;
-        }
-        return newSpeed;
-    }
-
     move() {
-        this.speed_x = this.getNewSpeed(this.speed_x, this.max_speed);
-        this.speed_y = this.getNewSpeed(this.speed_y, this.max_speed);
-        if (this.cx > width - this.radius || this.cx < this.radius)
-            this.speed_x *= -1;
+        this.applyForce(Math.random() -0.5, Math.random() -0.5);
+        this.speed_x += this.acc_x;
+        this.speed_y += this.acc_y;
 
-        if (this.cy > height - this.radius || this.cy < this.radius)
+        if (this.cx > width - 2 * this.radius || this.cx <  2 *  this.radius) {
+            this.speed_x *= -1;
+            if(this.cx > width - 2 * this.radius)
+                this.cx = width - 2 * this.radius;
+            else if (this.cx <  2 *  this.radius)
+                this.cx =  2 *  this.radius
+        }
+
+        if (this.cy > height - 2 * this.radius || this.cy < 2 * this.radius) {
             this.speed_y *= -1;
+            if(this.cy > height - 2 * this.radius)
+                this.cy = height - 2 * this.radius;
+            else if (this.cy < 2 * this.radius)
+                this.cy = 2 * this.radius;
+        }
+
+        if (Math.abs(this.speed_x) > this.max_speed)
+            this.speed_x = Math.sign(this.speed_x) * this.max_speed;
+
+        if (Math.abs(this.speed_y) > this.max_speed)
+            this.speed_y = Math.sign(this.speed_y) * this.max_speed;
+        if (this.practicesSocialDistance && enableSocialDistancing == true) {
+            this.speed_x *= 0.4;
+            this.speed_y *= 0.4;
+        }
 
         this.cx += this.speed_x;
         this.cy += this.speed_y;
+
+        this.acc_x *= 0;
+        this.acc_y *= 0;
     }
 }
 
@@ -108,8 +169,8 @@ class Person {
 
 var population = [];
 
-var n_susceptible = 5;
-var n_infected = 1;
+var n_susceptible = 100;
+var n_infected = 10;
 var n_removed = 0;
 var n_people = n_susceptible + n_infected + n_removed;
 
@@ -186,7 +247,33 @@ function drawPopulation() {
 
 function movePopulation() {
     for(let i = 0; i < n_people; i++) {
+        population[i].max_speed = populationSpeed;
         population[i].move();
+    }
+}
+
+function applyForces() {
+    for(let i = 0; i < n_people; i++) {
+        for(let j = 0; j < n_people; j++) {
+            if(i != j) {
+                // population[i].collideWith(population[j]);
+
+                if (enableSocialDistancing) {
+                    var force = population[j].calculateRepulsion(population[i]);
+                    population[i].applyForce(force[0], force[1]);
+                }
+            }
+        }
+    }
+}
+
+function applyCollisions() {
+    for(let i = 0; i < n_people; i++) {
+        for(let j = 0; j < n_people; j++) {
+            if(i != j) {
+                population[i].collideWith(population[j]);
+            }
+        }
     }
 }
 
@@ -194,8 +281,6 @@ function interactPopulation() {
     for(let i = 0; i < n_people; i++) {
         for(let j = 0; j < n_people; j++) {
             if(i != j) {
-            population[i].repelFrom(population[j]);
-            
             if(population[i].metWith(population[j], 6)) {
                 if(population[i].canInfect(population[j]) || population[j].canInfect(population[i])) {
                     population[i].infect();
@@ -210,10 +295,15 @@ function interactPopulation() {
 }
 
 
+function setValues() {
+    populationSpeed = document.getElementById("populationSpeed").value;
+    enableSocialDistancing = document.getElementById("enableSocialDistancing").checked;
+    socialDistancingRate = document.getElementById("socialDistancingRate").value;
+}
 
 function setup() {
-    populationSpeed = document.getElementById("populationSpeed").value;
 
+    setValues();
     addPeople(n_susceptible, types.SUSCEPTIBLE);
     addPeople(n_infected, types.INFECTED);
 }
@@ -222,6 +312,8 @@ function loop() {
     requestAnimationFrame(loop);
     context.clearRect(0, 0, canvas.width, canvas.height);
 
+    setValues();
+    applyForces();
     movePopulation();
     interactPopulation();
     drawPopulation();

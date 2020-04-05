@@ -39,7 +39,7 @@
         </div>
         <div class="col-sm">
             <p>Social distancing rate (how many people practice distancing)</p>
-            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+            <input type="range" min="0" max="1" value="0.5" step="0.1" class="slider" id="socialDistancingRate">
         </div>
         <div class="col-sm">
             <p>Quarantine percentage (how many infected people are quarantined)</p>
@@ -62,7 +62,11 @@
         <div class="col-sm">
             <button type="button" id="startSimulation" class="btn btn-primary">Start simulation</button>
             <button type="button" id="reload" class="btn btn-secondary">Reload</button>
-
+            
+        </div>
+        <div class="col-sm">
+            <input type="checkbox" id="enableSocialDistancing" name="enableSocialDistancing" value="enableSocialDistancing">
+            <label for="vehicle1">Enable social distancing</label><br>
         </div>
     </div>
 </div>
