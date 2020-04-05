@@ -74,7 +74,7 @@ class Person {
         context.stroke();
         context.beginPath();
         context.arc(this.cx, this.cy, infectionCircleRadius, 0. , 2 * Math.PI, false);
-        context.strokeStyle = "#F5F5F5";
+        context.strokeStyle = "#DCDCDC";
         
         context.stroke();
     }
@@ -373,10 +373,9 @@ function setValues() {
 function setup() {
 
     setValues();
-    n_susceptible = susceptibleCount;
-    n_infected = infectedCount;
-    // n_people = n_susceptible + n_infected + n_removed + n_asymptomatic;
-    console.log(n_infected);
+    n_susceptible = parseInt(susceptibleCount);
+    n_infected = parseInt(infectedCount);
+    n_people = n_susceptible + n_infected + n_removed + n_asymptomatic;
     addPeople(n_susceptible, types.SUSCEPTIBLE);
     addPeople(n_infected, types.INFECTED);
     // addPeople(n_asymptomatic, types.ASYMPTOMATIC);
