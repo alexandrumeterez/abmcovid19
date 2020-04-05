@@ -13,14 +13,17 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-sm" style="background-color: red;">
-            <p id="susceptibleCount" class="h4 text-white"></p>
+        <div class="col-sm">
+            <p id="susceptibleCount" style="background-color: blue;" class="h4 text-white"></p>
         </div>
-        <div class="col-sm" style="background-color: blue;">
-            <p id="infectedCount" class="h4 text-white"></p>
+        <div class="col-sm">
+            <p id="infectedCount" style="background-color: red;" class="h4 text-white"></p>
         </div>
-        <div class="col-sm" style="background-color: green;">
-            <p id="removedCount" class="h4 text-white"></p>
+        <div class="col-sm">
+            <p id="removedCount" style="background-color: green;" class="h4 text-white"></p>
+        </div>
+        <div class="col-sm">
+            <p id="asymptomaticCount" style="background-color: yellow;" class="h4 text-white"></p>
         </div>
     </div>
     <div class="row">
@@ -35,7 +38,7 @@
     <div class="row">
         <div class="col-sm">
             <p>Population speed (simulates lockdown)</p>
-            <input type="range" min="0" max="10" value="5" step="1" class="slider" id="populationSpeed">
+            <input type="range" min="0" max="3" value="2" step="0.1" class="slider" id="populationSpeed">
         </div>
         <div class="col-sm">
             <p>Social distancing rate (how many people practice distancing)</p>
@@ -50,7 +53,7 @@
     <div class="row">
         <div class="col-sm">
             <p>Time to develop symptoms (how long you can stay asymptomatic)</p>
-            <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+            <input type="range" min="7" max="14" value="10" class="slider" id="timeToSymptoms">
         </div>
         <div class="col-sm">
             <p>Time until detection (how long until you get diagnosed)</p>

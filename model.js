@@ -6,6 +6,7 @@ var height = canvas.height;
 var populationSpeed;
 var socialDistancingRate;
 var enableSocialDistancing;
+var timeToSymptoms;
 
 function getRandom(min, max) {
     return Math.random() * (max - min) + min;
@@ -39,6 +40,7 @@ class Person {
         this.type = type;
         this.acc_x = 0;
         this.acc_y = 0;
+        this.asymptomaticTime = 0;
         if (Math.random() < socialDistancingRate)
             this.practicesSocialDistance = true;
         else
@@ -47,6 +49,8 @@ class Person {
             this.color = colors.SUSCEPTIBLE;
         else if (type == types.INFECTED)
             this.color = colors.INFECTED;
+        else if (type == types.ASYMPTOMATIC) 
+            this.color = colors.ASYMPTOMATIC;
     }
 
     draw() {
@@ -94,8 +98,9 @@ class Person {
     }
 
     canInfect(p) {
-        return (this.type == types.INFECTED && p.type == types.SUSCEPTIBLE);
+        return ((this.type == types.INFECTED || this.type == types.ASYMPTOMATIC) && p.type == types.SUSCEPTIBLE);
     }
+
 
     applyForce(force_x, force_y) {
         this.acc_x += force_x;
@@ -122,6 +127,11 @@ class Person {
     }
 
     infect() {
+        this.type = types.ASYMPTOMATIC;
+        this.color = colors.ASYMPTOMATIC;
+    }
+
+    developSymptoms() {
         this.type = types.INFECTED;
         this.color = colors.INFECTED;
     }
@@ -163,6 +173,17 @@ class Person {
         this.acc_x *= 0;
         this.acc_y *= 0;
     }
+
+    update() {
+        if(this.type == types.ASYMPTOMATIC) {
+            this.asymptomaticTime += 1;
+            if (this.asymptomaticTime == timeToSymptoms) {
+                this.developSymptoms();
+                n_asymptomatic -= 1;
+                n_infected += 1;
+            }
+        }
+    }
 }
 
 
@@ -170,9 +191,10 @@ class Person {
 var population = [];
 
 var n_susceptible = 100;
-var n_infected = 10;
+var n_infected = 1;
 var n_removed = 0;
-var n_people = n_susceptible + n_infected + n_removed;
+var n_asymptomatic = 0;
+var n_people = n_susceptible + n_infected + n_removed + n_asymptomatic;
 
 // Chart ----------------------------------------
 var dps_susceptible = [];
@@ -222,12 +244,15 @@ var updateChart = function (count) {
 
 // Update stuff above chart
 var susCountDiv = document.getElementById("susceptibleCount");
-var infCountDiv = document.getElementById("removedCount");
-var remCountDiv = document.getElementById("infectedCount");
+var infCountDiv = document.getElementById("infectedCount");
+var remCountDiv = document.getElementById("removedCount");
+var asympCountDiv = document.getElementById("asymptomaticCount");
+
 var updateCounts = function() {
     susCountDiv.textContent = "Susceptible: " + n_susceptible;
     infCountDiv.textContent = "Infected: " + n_infected;
     remCountDiv.textContent = "Removed: " + n_removed;
+    asympCountDiv.textContent = "Asymptomatic: " + n_asymptomatic;
 };  
 updateCounts();
 setInterval(function(){updateCounts()}, updateInterval);
@@ -245,19 +270,16 @@ function drawPopulation() {
     }
 }
 
-function movePopulation() {
+function updatePopulation() {
     for(let i = 0; i < n_people; i++) {
         population[i].max_speed = populationSpeed;
         population[i].move();
     }
 }
-
 function applyForces() {
     for(let i = 0; i < n_people; i++) {
         for(let j = 0; j < n_people; j++) {
             if(i != j) {
-                // population[i].collideWith(population[j]);
-
                 if (enableSocialDistancing) {
                     var force = population[j].calculateRepulsion(population[i]);
                     population[i].applyForce(force[0], force[1]);
@@ -281,15 +303,14 @@ function interactPopulation() {
     for(let i = 0; i < n_people; i++) {
         for(let j = 0; j < n_people; j++) {
             if(i != j) {
-            if(population[i].metWith(population[j], 6)) {
-                if(population[i].canInfect(population[j]) || population[j].canInfect(population[i])) {
-                    population[i].infect();
-                    population[j].infect();
-                    n_susceptible -= 1;
-                    n_infected += 1;
+                if(population[i].metWith(population[j], 6)) {
+                    if(population[i].canInfect(population[j])) {
+                        population[j].infect();
+                        n_asymptomatic += 1;
+                        n_susceptible -= 1;
+                    }
                 }
             }
-        }
         }
     }
 }
@@ -299,6 +320,7 @@ function setValues() {
     populationSpeed = document.getElementById("populationSpeed").value;
     enableSocialDistancing = document.getElementById("enableSocialDistancing").checked;
     socialDistancingRate = document.getElementById("socialDistancingRate").value;
+    timeToSymptoms = document.getElementById("timeToSymptoms").value;
 }
 
 function setup() {
@@ -306,6 +328,12 @@ function setup() {
     setValues();
     addPeople(n_susceptible, types.SUSCEPTIBLE);
     addPeople(n_infected, types.INFECTED);
+    // addPeople(n_asymptomatic, types.ASYMPTOMATIC);
+    setInterval(function() {
+        for(let i = 0; i < n_people; i++) {
+            population[i].update();
+        }
+    }, updateInterval);    
 }
 
 function loop() {
@@ -314,7 +342,7 @@ function loop() {
 
     setValues();
     applyForces();
-    movePopulation();
+    updatePopulation();
     interactPopulation();
     drawPopulation();
 }
